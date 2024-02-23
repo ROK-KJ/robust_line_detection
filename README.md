@@ -26,7 +26,7 @@ SLAM에 사용하기 위한 강인한 Line 추출 및 추적
 
 ### 결과 사진 예시 
 
-![프로젝트 이미지](https://file.notion.so/f/f/33ab5710-0e62-4945-b834-ff76ea81a48f/d75e63d0-1264-4e59-a9e6-d1cdb2e628ef/Untitled.png?id=3e50fa97-c4d1-4f11-8c26-42d295caf704&table=block&spaceId=33ab5710-0e62-4945-b834-ff76ea81a48f&expirationTimestamp=1708588800000&signature=feVdwCFmrETshPlTMvT-3KOS8RFlb8buoEi5mlSyk5E&downloadName=Untitled.png)
+![프로젝트 이미지](https://file.notion.so/f/f/33ab5710-0e62-4945-b834-ff76ea81a48f/d75e63d0-1264-4e59-a9e6-d1cdb2e628ef/Untitled.png?id=3e50fa97-c4d1-4f11-8c26-42d295caf704&table=block&spaceId=33ab5710-0e62-4945-b834-ff76ea81a48f&expirationTimestamp=1708768800000&signature=Ae16QAanzErpU0RVeS2Fozri-eNvu9KY6hUx3kq_vpI&downloadName=Untitled.png)
 
 
 ## 사용 방법

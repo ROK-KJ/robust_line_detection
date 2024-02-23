@@ -1,7 +1,6 @@
 import cv2, numpy as np
 from itertools import product
 from sklearn.metrics import roc_auc_score
-from skimage.metrics import structural_similarity as compare_ssim
 import timeit
 from find_feature_points import auto_canny, auto_canny_otsu, canny
 
@@ -44,13 +43,13 @@ class CostFunction :
     def compute_weighted_metrics(self, gray, ground_truth_image, edge_image, filter_type, kernel_size, thresholding_method):
         # f1, mcr, essim, continuity, fom, processing time, 
         f1_score, mcr = self.compute_f1_and_MCR(ground_truth_image, edge_image)
-        essim = self.compute_essim(ground_truth_image, edge_image, filter_type, kernel_size, thresholding_method)
+        essim = self.compute_essim(ground_truth_image, edge_image)
         continuity = self.compute_continuity(edge_image)
         fom = self.compute_fom(ground_truth_image, edge_image)
         processing_time = self.compute_processing_time(gray, filter_type, kernel_size, thresholding_method)
         # print(f1_score, mcr, essim, continuity, fom, processing_time)
         # return f1_score * 0.4 + essim * 0.35 + continuity * 0.35 - processing_time * 0.1
-        return (f1_score * 0.2) + (mcr * 0.1) + (essim * 0.3) + (continuity * 0.3) - (processing_time * 0.1) 
+        return (f1_score * 0.15) + (mcr * 0.1) + (fom * 0.15) + (essim * 0.3) + (continuity * 0.3) - (processing_time * 0.1) 
         
 
     """f1 score and misclassification rate(MCR)"""
@@ -80,14 +79,13 @@ class CostFunction :
         return fom_sum / N_g
 
     """compute essim"""
-    def compute_essim(self, ground_truth_image, edge_image, filter_type, ksize, thresholding_method):
+    def compute_essim(self, ground_truth_image, edge_image):
         luminance1, luminance2 = self.compute_luminance(ground_truth_image, edge_image)
         contrast1, contrast2 = self.compute_contrast(ground_truth_image, edge_image)
-        edges1, edges2 = self.edge_detection(ground_truth_image, filter_type, ksize, thresholding_method), self.edge_detection(edge_image, filter_type, ksize, thresholding_method)
 
         l = (2 * luminance1 * luminance2 + 0.01) / (luminance1**2 + luminance2**2 + 0.01)
         c = (2 * contrast1 * contrast2 + 0.03) / (contrast1**2 + contrast2**2 + 0.03)
-        e = compare_ssim(edges1, edges2)
+        e = (np.cov(ground_truth_image.ravel(), edge_image.ravel())[0, 1] + 0.01) / (contrast1 * contrast2 + 0.01)
 
         return l * 0.33 + c * 0.33 + e * 0.33
 

@@ -44,13 +44,12 @@ class CostFunction :
         # f1, mcr, essim, continuity, fom, processing time, 
         f1_score, mcr = self.compute_f1_and_MCR(ground_truth_image, edge_image)
         essim = self.compute_essim(ground_truth_image, edge_image)
-        continuity = self.compute_continuity(edge_image)
+        continuity = self.compute_continuity(ground_truth_image)
         fom = self.compute_fom(ground_truth_image, edge_image)
         processing_time = self.compute_processing_time(gray, filter_type, kernel_size, thresholding_method)
         # print(f1_score, mcr, essim, continuity, fom, processing_time)
         # return f1_score * 0.4 + essim * 0.35 + continuity * 0.35 - processing_time * 0.1
-        return (f1_score * 0.15) + (mcr * 0.1) + (fom * 0.15) + (essim * 0.3) + (continuity * 0.3) - (processing_time * 0.1) 
-        
+        return (f1_score * 0.2) + (mcr * 0.1) + (fom * 0.25) + (essim * 0.3) + (continuity * 0.25) - (processing_time * 0.1) 
 
     """f1 score and misclassification rate(MCR)"""
     def compute_f1_and_MCR(self, ground_truth_image, edge_image) :
@@ -66,7 +65,7 @@ class CostFunction :
         mcr = (FP + FN) / (TP + TN + FP + FN) 
         return f1_score, 1 - mcr
     
-    """compute FOM (form of merit)""" 
+    """compute FOM (figure of merit)""" 
     def compute_fom(self, ground_truth_image, edge_image, alpha=0.1) : 
         N_g = len(ground_truth_image)
         N_d = len(edge_image)
@@ -112,7 +111,7 @@ class CostFunction :
 
 
     """find edgel and edge lines to compute continuity"""
-    def find_edges_and_segments(self, binary_image, threshold=15):
+    def find_edges_and_segments(self, binary_image, threshold=20):
         contours, _ = cv2.findContours(binary_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         edge_segments = contours  
         
@@ -131,11 +130,14 @@ class CostFunction :
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         else :
             gray = image.copy()
+        
         if filter_type == 'gauss' : 
             blur = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
-        else : 
+        elif filter_type == 'median' : 
             blur = cv2.medianBlur(gray, kernel_size)
-            
+        else :
+            blur = gray.copy()
+
         if thresholding_method == 'median' :
             edge = auto_canny(blur)
         elif thresholding_method == 'otsu' : 
@@ -148,14 +150,14 @@ class CostFunction :
 
     """random transformation with brightness, contrast"""
     def transform_img(self, img, seed) : 
-        v = np.arange(0.2, 2.1, 0.1)
+        range1 = np.arange(-50, 50, 5) 
         np.random.seed(seed)
-        factor1 = np.random.choice(v)
+        factor1 = np.random.choice(range1)
+        range2 = np.arange(0.2, 1.6, 0.1)
         np.random.seed(seed+1)
-        factor2 = np.random.choice(v)
+        factor2 = np.random.choice(range2)
         
-        img = np.array(255 * (img / 255) ** factor1, dtype='uint8')
-        return  cv2.multiply(img, factor2)
+        return  cv2.convertScaleAbs(img, alpha=factor2, beta=factor1)
 
 
 if __name__ == '__main__' :

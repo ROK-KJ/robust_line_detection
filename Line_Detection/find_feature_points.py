@@ -31,10 +31,11 @@ def tracking(cap, **best_params) :
             if len(new_p) > 0:
                 new_p = new_p.reshape(-1, 2) 
                 good_new = np.vstack((good_new, new_p))  
-
-            inside_frame = (good_new[:, 0] > 0) & (good_new[:, 0] < frame.shape[1]) & \
-                        (good_new[:, 1] > 0) & (good_new[:, 1] < frame.shape[0])
-            good_new = good_new[inside_frame]
+            else : 
+                good_new = new_p.copy()
+            # inside_frame = (good_new[:, 0] > 0) & (good_new[:, 0] < frame.shape[1]) & \
+            #             (good_new[:, 1] > 0) & (good_new[:, 1] < frame.shape[0])
+            # good_new = good_new[inside_frame]
 
             valid_points = [] 
 
@@ -90,9 +91,9 @@ def find_new_points(frame, hough_threshold, min_line_length, max_line_gap, **par
 """edge detecting with best params"""
 def run_best_edge_detector(image, **params) :
     if params :
-        ksize = params['kernel_size']
         ftype = params['filter_type']
-        auto_method = params['thresholding_method']
+        ksize = params['kernel_size']
+        thresholding_method = params['thresholding_method']
         if ftype == 'gauss' :
             blur = cv2.GaussianBlur(image, (ksize, ksize), 0)
         elif ftype == 'median' : 
@@ -100,24 +101,24 @@ def run_best_edge_detector(image, **params) :
         else :
             blur = image.copy()
         
-        if auto_method == 'median' : 
-            edge = auto_canny(blur)
+        if thresholding_method == 'median' : 
+            edge_image = auto_canny(blur)
         else :
-            edge = auto_canny_otsu(blur)
+            edge_image = auto_canny_otsu(blur)
     else :
-        edge = canny(image)
-    return edge
+        edge_image = canny(image)
+    return edge_image 
 
 
 """edge simplifier"""
-def simplify_edges(edge) : 
-    contours, _ = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+def simplify_edges(edge_image) : 
+    contours, _ = cv2.findContours(edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     count_threshold = np.percentile([len(c) for c in contours], 50)
     length_threshold = np.percentile([cv2.arcLength(c, True) for c in contours], 50)
     contour_list = [c for c in contours if len(c) > count_threshold and cv2.arcLength(c, True) > length_threshold]         
-    binary_contour_image = np.zeros(edge.shape, dtype=np.uint8)
-    cv2.drawContours(binary_contour_image, contour_list, -1, (255, 255, 255), 1)
-    return binary_contour_image
+    simplified_edges = np.zeros(edge_image.shape, dtype=np.uint8)
+    cv2.drawContours(simplified_edges, contour_list, -1, (255, 255, 255), 1)
+    return simplified_edges
 
 
 def remove_close_points(points, threshold):

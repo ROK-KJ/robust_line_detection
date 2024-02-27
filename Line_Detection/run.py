@@ -4,7 +4,7 @@ from find_feature_points import tracking
 import cv2
 
 parser = argparse.ArgumentParser(description='Robust Line and Point Detection / Tracking')
-parser.add_argument('--input', type=str, help="Input Video Name or Camera Number")
+parser.add_argument('--input', default='0', type=str, help="Input Video Name or Camera Number")
 args = parser.parse_args()
 
 def run(video_name) :

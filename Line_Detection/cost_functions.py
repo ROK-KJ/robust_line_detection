@@ -71,9 +71,12 @@ class CostFunction :
         N_d = np.sum((edge_image == 255))
         N_max = np.max([N_g, N_d])
 
+        gt_edges = np.argwhere(ground_truth_image == 255)
+        detected_edges = np.argwhere(edge_image == 255)
+        
         fom_sum = 0
-        for d in edge_image : 
-            distances = np.sqrt(np.sum((ground_truth_image - d) ** 2, axis=1))
+        for d in detected_edges : 
+            distances = np.sqrt(np.sum((gt_edges - d) ** 2, axis=1))
             min_distance = np.min(distances)
             fom_sum += 1 / (1 + alpha * min_distance ** 2)
         return fom_sum / N_max

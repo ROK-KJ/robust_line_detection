@@ -67,15 +67,16 @@ class CostFunction :
     
     """compute FOM (figure of merit)""" 
     def compute_fom(self, ground_truth_image, edge_image, alpha=0.1) : 
-        N_g = len(ground_truth_image)
-        N_d = len(edge_image)
+        N_g = np.sum((ground_truth_image == 255))
+        N_d = np.sum((edge_image == 255))
+        N_max = np.max([N_g, N_d])
 
         fom_sum = 0
         for d in edge_image : 
             distances = np.sqrt(np.sum((ground_truth_image - d) ** 2, axis=1))
             min_distance = np.min(distances)
             fom_sum += 1 / (1 + alpha * min_distance ** 2)
-        return fom_sum / N_g
+        return fom_sum / N_max
 
     """compute essim"""
     def compute_essim(self, ground_truth_image, edge_image):
@@ -165,4 +166,4 @@ if __name__ == '__main__' :
     _, first_frame = cap.read() 
     cf = CostFunction(first_frame)
 
-    print(cf.best_params)
+    # print(cf.best_params)

@@ -14,6 +14,11 @@ def find_new_points(frame, hough_threshold, min_line_length, max_line_gap, **par
         new_points, lines = None, None
     return new_points, lines, simplified 
 
+def calculate_slope(x1, y1, x2, y2):
+    if x2 - x1 == 0:
+        return float('inf')  # Avoid division by zero
+    return (y2 - y1) / (x2 - x1)
+
 """edge detecting with best params"""
 def run_best_edge_detector(image, **params) :
     if params :
@@ -39,11 +44,14 @@ def run_best_edge_detector(image, **params) :
 """edge simplifier"""
 def simplify_edges(edge_image) : 
     contours, _ = cv2.findContours(edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    count_threshold = np.percentile([len(c) for c in contours], 25)
-    length_threshold = np.percentile([cv2.arcLength(c, True) for c in contours], 25)
-    contour_list = [c for c in contours if len(c) > count_threshold and cv2.arcLength(c, True) > length_threshold]         
-    simplified_edges = np.zeros(edge_image.shape, dtype=np.uint8)
-    cv2.drawContours(simplified_edges, contour_list, -1, (255, 255, 255), 1)
+    if len(contours) < 15 : # not simplified
+        simplified_edges = edge_image.copy()
+    else : 
+        count_threshold = np.percentile([len(c) for c in contours], 25)
+        length_threshold = np.percentile([cv2.arcLength(c, True) for c in contours], 25)
+        contour_list = [c for c in contours if len(c) > count_threshold and cv2.arcLength(c, True) > length_threshold]         
+        simplified_edges = np.zeros(edge_image.shape, dtype=np.uint8)
+        cv2.drawContours(simplified_edges, contour_list, -1, (255, 255, 255), 1)
     return simplified_edges
 
 

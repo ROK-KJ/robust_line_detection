@@ -8,15 +8,12 @@ from cost_functions import CostFunction
 from utils import *
 
 POINT_DISTANCE_THRESHOLD=25 
-HOUGH_LINE_THRESHOLD=100
-MIN_LINE_LENGTH=120
-MAX_LINE_GAP=100
+HOUGH_LINE_THRESHOLD=50
+MIN_LINE_LENGTH=50
+MAX_LINE_GAP=30
 lk_params = dict(winSize=(21, 21), maxLevel=2, 
                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
                            10, 0.03))
-
-
-
 
 class LinePointTracker :
     def __init__(self):
@@ -32,6 +29,7 @@ class LinePointTracker :
     def tracking_callback(self, data, **best_params):
         if self.p0 is None :
             old_frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            old_frame = cv2.resize(old_frame, (640, 480)) 
 
             if not os.path.exists('best_params.yaml') :
                 cf = CostFunction(old_frame)
@@ -48,6 +46,8 @@ class LinePointTracker :
 
         else : 
             frame = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            frame = cv2.resize(frame, (640, 480)) 
+
             window = frame.copy()
             self.frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             try : 
@@ -91,10 +91,7 @@ class LinePointTracker :
                             cv2.line(window, (x1, y1), (x2, y2), (0, 255, 0), 3)
                             cv2.circle(window, (x1, y1), 5, (0, 255, 0), -1)
                             cv2.circle(window, (x2, y2), 5, (0, 255, 0), -1)
-                            
-                        else :
-                            cv2.line(window, (x1, y1), (x2, y2), (255,0, 0), 1)   
-                
+
                 cv2.imshow('Frame with Optical Flow', cv2.hconcat([window, cv2.cvtColor(self.edges,cv2.COLOR_GRAY2BGR)]))
                 cv2.waitKey(2)
 

@@ -4,6 +4,8 @@ CNRLab Robust Line Detection by yeseul Jeong
 
 이 레파지토리는 아직 개발중입니다. 
 
+> <b>(24.03.05) [update ROS-version]</b> image topic subscribe 하여 결과 출력 형식 구현 ▶▶ Line_Detection_ROS 파일에 따로 업로드 하였음. 
+
 
 ## 목차
 
@@ -26,19 +28,36 @@ SLAM에 사용하기 위한 강인한 Line 추출 및 추적
 
 ### 결과 사진 예시 
 
-![프로젝트 이미지](https://file.notion.so/f/f/33ab5710-0e62-4945-b834-ff76ea81a48f/d75e63d0-1264-4e59-a9e6-d1cdb2e628ef/Untitled.png?id=3e50fa97-c4d1-4f11-8c26-42d295caf704&table=block&spaceId=33ab5710-0e62-4945-b834-ff76ea81a48f&expirationTimestamp=1708768800000&signature=Ae16QAanzErpU0RVeS2Fozri-eNvu9KY6hUx3kq_vpI&downloadName=Untitled.png)
-
+[추후 업로드] 
 
 ## 사용 방법
 
-git clone 후, `run.py` 실행 
+### [video version]
 
-실행 시 입력 파라미터로 실행할 video path 입력
+git clone 후, Line_Detection directory의 `run.py` 실행 
 
-### Example
+실행 시 입력 파라미터로 실행할 video path 혹은 camera number (0, 1, ...) 입력
+
+#### Video Input Example
 ```
 python3 run.py --input test.mp4
 ```
+
+#### Camera Input Example
+```
+python3 run.py --input 0
+```
+
+
+### [ROS application version]
+
+git clone 후, Line_Detection directory의 `run.py` 실행 
+
+`"/camera/rgb/image_raw"` topic을 subscribe하여 로직이 실행됨 
+
+토픽명 변경하고자 할 시 LinePointTracker의 `self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.tracking_callback)` 부분 수정 
+
+cost function 실행시간 이슈로 최초 실행 시 parameter를 저장할 `.yaml` 파일 생성 후 로드하여 사용하도록 수정 (.yaml 파일이 존재하는 경우에만 자동 로드 됨)
 
 
 ## prerequisites

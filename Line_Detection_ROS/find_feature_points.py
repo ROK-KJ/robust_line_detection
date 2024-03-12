@@ -7,10 +7,13 @@ import cv2, yaml, os
 from cost_functions import CostFunction
 from utils import *
 
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('results.mp4', fourcc, 30.0, (640, 480))
+
 POINT_DISTANCE_THRESHOLD=25 
-HOUGH_LINE_THRESHOLD=50
+HOUGH_LINE_THRESHOLD=25
 MIN_LINE_LENGTH=50
-MAX_LINE_GAP=30
+MAX_LINE_GAP=40
 lk_params = dict(winSize=(21, 21), maxLevel=2, 
                  criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 
                            10, 0.03))
@@ -57,9 +60,8 @@ class LinePointTracker :
                     good_new = p1[st == 1].reshape(-1, 2)
                 good_old = self.p0[st == 1].reshape(-1, 2)
                 new_p, self.lines, self.edges = find_new_points(frame, HOUGH_LINE_THRESHOLD, MIN_LINE_LENGTH, MAX_LINE_GAP, **self.best_params)
-                new_p = new_p.reshape(-1, 2) 
-
                 if good_new is not None and new_p is not None :
+                    new_p = new_p.reshape(-1, 2) 
                     good_new = np.vstack((good_new, new_p))  
                 elif new_p is not None : 
                     good_new = new_p.copy()
@@ -83,16 +85,17 @@ class LinePointTracker :
         
                 if self.lines is not None :
                     for line in self.lines :
-                        x1, y1, x2, y2 = line[0]
-                        angle = get_angle(x1, y1, x2, y2)      
+                        x1, y1, x2, y2 = line
+                        # angle = get_angle(x1, y1, x2, y2)      
 
-                        """only vertical lines"""
-                        if abs(angle) > 80 and abs(angle) < 100 :  # vertical line 
-                            cv2.line(window, (x1, y1), (x2, y2), (0, 255, 0), 3)
-                            cv2.circle(window, (x1, y1), 5, (0, 255, 0), -1)
-                            cv2.circle(window, (x2, y2), 5, (0, 255, 0), -1)
+                        # """only vertical lines"""
+                        # if abs(angle) > 80 and abs(angle) < 100 :  # vertical line 
+                        cv2.line(window, (x1, y1), (x2, y2), (0, 255, 0), 3)
+                        cv2.circle(window, (x1, y1), 5, (0, 255, 0), -1)
+                        cv2.circle(window, (x2, y2), 5, (0, 255, 0), -1)
 
                 cv2.imshow('Frame with Optical Flow', cv2.hconcat([window, cv2.cvtColor(self.edges,cv2.COLOR_GRAY2BGR)]))
+                out.write(window)
                 cv2.waitKey(2)
 
                 self.old_gray = self.frame_gray.copy()

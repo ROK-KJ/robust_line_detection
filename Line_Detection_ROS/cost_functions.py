@@ -3,6 +3,8 @@ from itertools import product
 from sklearn.metrics import roc_auc_score
 import timeit
 from utils import *
+from scipy.spatial.distance import cdist
+from scipy.ndimage import sobel
 
 class CostFunction :
     """input first frame"""
@@ -45,9 +47,9 @@ class CostFunction :
         f1_score, mcr = self.compute_f1_and_MCR(ground_truth_image, edge_image)
         essim = self.compute_essim(ground_truth_image, edge_image)
         continuity = self.compute_continuity(ground_truth_image)
-        fom = self.compute_fom(ground_truth_image, edge_image)
+        doe = self.compute_doe(ground_truth_image, edge_image)
         # processing_time = self.compute_processing_time(gray, filter_type, kernel_size, thresholding_method)
-        return (f1_score * 0.15) + (mcr * 0.1) + (fom * 0.25) + (essim * 0.25) + (continuity * 0.25) # - (processing_time * 0.1) 
+        return (f1_score * 0.15) + (mcr * 0.1) + (doe * 0.25) + (essim * 0.25) + (continuity * 0.25) # - (processing_time * 0.1) 
 
     """f1 score and misclassification rate(MCR)"""
     def compute_f1_and_MCR(self, ground_truth_image, edge_image) :
@@ -63,21 +65,28 @@ class CostFunction :
         mcr = (FP + FN) / (TP + TN + FP + FN) 
         return f1_score, 1 - mcr
     
-    """compute FOM (figure of merit)""" 
-    def compute_fom(self, ground_truth_image, edge_image, alpha=0.1) : 
-        N_g = np.sum((ground_truth_image == 255))
-        N_d = np.sum((edge_image == 255))
-        N_max = np.max([N_g, N_d])
-
-        gt_edges = np.argwhere(ground_truth_image == 255)
-        detected_edges = np.argwhere(edge_image == 255)
+    def compute_doe(self, gt_image, detected_image, alpha=0.1, beta=0.1):
+        """compute displacement of edge images"""
+        gt_direction = self.compute_gradient_directions(gt_image)
+        det_direction = self.compute_gradient_directions(detected_image)
         
-        fom_sum = 0
-        for d in detected_edges : 
-            distances = np.sqrt(np.sum((gt_edges - d) ** 2, axis=1))
-            min_distance = np.min(distances)
-            fom_sum += 1 / (1 + alpha * min_distance ** 2)
-        return fom_sum / N_max
+        gt_edges = np.argwhere(gt_image == 255)
+        det_edges = np.argwhere(detected_image == 255)
+
+        N_max = max(len(gt_edges), len(det_edges))
+        doe_sum = 0
+        
+        if gt_edges.size > 0 and det_edges.size > 0:
+            distances = cdist(det_edges, gt_edges, 'euclidean')
+            for i, det_edge in enumerate(det_edges):
+                min_idx = np.argmin(distances[i])
+                gt_edge = gt_edges[min_idx]
+                direction_diff = np.abs(gt_direction[gt_edge[0], gt_edge[1]] - det_direction[det_edge[0], det_edge[1]])
+                direction_diff = np.mod(direction_diff + np.pi, 2 * np.pi) - np.pi
+                doe_sum += 1 / (1 + alpha * distances[i][min_idx] ** 2 + beta * direction_diff ** 2)
+        
+        doe = doe_sum / N_max
+        return doe
 
     """compute essim"""
     def compute_essim(self, ground_truth_image, edge_image):
@@ -103,6 +112,14 @@ class CostFunction :
         continuity = len(edgels) / (len(edge_seg) + epsilon)
         return continuity
 
+    def compute_gradient_directions(self, image):
+        """compute pixel gradient direction with sobel filter"""
+        dx = sobel(image, axis=1, mode='constant')
+        dy = sobel(image, axis=0, mode='constant')
+        directions = np.arctan2(dy, dx)
+        return directions
+
+
     """compute luminance of two images"""
     def compute_luminance(self, img1, img2):
         return np.mean(img1), np.mean(img2)
@@ -110,7 +127,6 @@ class CostFunction :
     """compute contrast of two images"""
     def compute_contrast(self, img1, img2):
         return np.std(img1), np.std(img2)
-
 
     """find edgel and edge lines to compute continuity"""
     def find_edges_and_segments(self, binary_image, threshold=20):

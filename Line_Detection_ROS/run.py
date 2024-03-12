@@ -1,4 +1,4 @@
-from find_feature_points import LinePointTracker
+from find_feature_points import LinePointTracker, out
 import cv2
 import rospy
 
@@ -10,7 +10,7 @@ def run() :
     except KeyboardInterrupt:
         print("Shutting down")
     cv2.destroyAllWindows()
-
+    out.release()
 
 
 if __name__ == '__main__' :

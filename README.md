@@ -5,6 +5,7 @@ CNRLab Robust Line Detection by yeseul Jeong
 이 레파지토리는 아직 개발중입니다. 
 
 > <b>(24.03.05) [update ROS-version]</b> image topic subscribe 하여 결과 출력 형식 구현 ▶▶ Line_Detection_ROS 파일에 따로 업로드 하였음. 
+> <b>(24.03.12) [update cost function, line algorithm]</b> cost function update (figure of merit ▶ displacement of edge images, line merge function added)
 
 
 ## 목차
